@@ -16,7 +16,7 @@ private [chroma] object Implicits {
 
 trait Color
 
-case class RGB(r: Int, g: Int, b: Int) extends Color {
+case class Rgb(r: Int, g: Int, b: Int) extends Color {
   val range = 0 to 255
   r :: g :: b :: Nil map(d => require((0 to 255).contains(d), "%s must be between 0..255" format d))
 
@@ -39,29 +39,21 @@ case class RGB(r: Int, g: Int, b: Int) extends Color {
     (r :: g :: b :: Nil).map(_.toDouble / 255) match {
       case r2 :: g2 :: b2 :: Nil =>
         val (min, max) = (Math.min(r2, Math.min(g2, b2)), Math.max(r2, Math.max(g2, b2)))
+        val delta = max - min
         if(min == max) {
           Hsv(0, 0, min) // monochrome
         } else {
-          (r2 :: g2 :: b2 :: Nil).map(v => max - v / (max - min)).map(_ * -1) match {
-            case r3 :: g3 :: b3 ::  Nil =>
-              val hue =
-                if(r2 == max && g2 == min) 5 + b3
-                else if(r2 == max && g2 != min) 1 - g3
-                else if(g2 == max && b2 == min) r3 + 1
-                else if(g2 == max && b2 != min) 3 - b3
-                else if(r2 == max) 3 + g3
-                else 5 - r3
-              val (h, s, v) = (60 * hue, (max - min) / max, max)
-              Hsv(h, s, v)
-          }
+          Hsv((max match {
+             case n if(n == r2) => (g2 - b2) / delta + (if(g2 < b2) 6 else 0)
+             case n if(n == g2) => (b2 - r2) / delta + 2
+             case n => (r2 - g2) / delta + 4
+          }) * 60, if(max == 0)  0 else delta / max , max)
         }
     }
   }
 }
 
-case class Hsv(h: Double, s: Double, v: Double) extends Color {
-
-}
+case class Hsv(h: Double, s: Double, v: Double) extends Color
 
 case class Hex(hex: String) extends Color {
    println(hex)
@@ -72,10 +64,10 @@ case class Hex(hex: String) extends Color {
    import Implicits._
    def rgb = hex.size match {
      case 3 => hex.partionsOf(1).map(_*2).map(Integer.parseInt(_, 16)) match {
-       case List(r, g, b) => RGB(r, g, b)
+       case List(r, g, b) => Rgb(r, g, b)
      }
      case 6 => hex.partionsOf(2).map(Integer.parseInt(_, 16)) match {
-       case List(r, g, b) => RGB(r, g, b)
+       case List(r, g, b) => Rgb(r, g, b)
      }
    }
 
@@ -84,6 +76,4 @@ case class Hex(hex: String) extends Color {
 }
 
 
-case class CMYK(c: Double, m: Double, y: Double, k: Double) extends Color {
-
-}
+case class CMYK(c: Double, m: Double, y: Double, k: Double) extends Color
