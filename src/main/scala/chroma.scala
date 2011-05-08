@@ -56,7 +56,6 @@ case class Rgb(r: Int, g: Int, b: Int) extends Color {
 case class Hsv(h: Double, s: Double, v: Double) extends Color
 
 case class Hex(hex: String) extends Color {
-   println(hex)
    val range = ((0 to 9) ++ ('a' to 'f')).map(_.toString.charAt(0))
    require((3 :: 6 :: Nil).contains(hex.size), "invalid length")
    hex.toList.foreach(l => require(range.contains(l.toLowerCase), "%s must be one of %s" format(l, range)))
@@ -72,6 +71,8 @@ case class Hex(hex: String) extends Color {
    }
 
    def cmyk = rgb.cmyk
+
+   def hsv = rgb.hsv
 
 }
 
