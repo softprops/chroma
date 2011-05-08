@@ -36,15 +36,24 @@ case class RGB(r: Int, g: Int, b: Int) extends Color {
   }
 
   def hsv = {
-    (r :: g :: b :: Nil).map(_ / 255) match {
+    (r :: g :: b :: Nil).map(_.toDouble / 255) match {
       case r2 :: g2 :: b2 :: Nil =>
         val (min, max) = (Math.min(r2, Math.min(g2, b2)), Math.max(r2, Math.max(g2, b2)))
-        if(min == max) Hsv(0, 0, min) // black-gray-white
-        else {
-          val d = if(r2 == min) g2 - b2 else (if(b2 == min) r2 - g2 else b2 - r2)
-          val h0 = if(r2 == min) 3 else (if(b2 == min) 1 else 5)
-          val (h, s, v) = (60 * (h0 - d / (max - min)), (max - min) / max, max)
-          Hsv(h, s, v)
+        if(min == max) {
+          Hsv(0, 0, min) // monochrome
+        } else {
+          (r2 :: g2 :: b2 :: Nil).map(v => max - v / (max - min)).map(_ * -1) match {
+            case r3 :: g3 :: b3 ::  Nil =>
+              val hue =
+                if(r2 == max && g2 == min) 5 + b3
+                else if(r2 == max && g2 != min) 1 - g3
+                else if(g2 == max && b2 == min) r3 + 1
+                else if(g2 == max && b2 != min) 3 - b3
+                else if(r2 == max) 3 + g3
+                else 5 - r3
+              val (h, s, v) = (60 * hue, (max - min) / max, max)
+              Hsv(h, s, v)
+          }
         }
     }
   }
